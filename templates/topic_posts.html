@@ -4,7 +4,6 @@
 
 {% load static %}
 
-
 {% block title %}{{ topic.subject }}{% endblock %}
 
 {% block breadcrumb %}
@@ -42,6 +41,9 @@
               </div>
             </div>
             {{ post.get_message_as_markdown }}
+            {% if post.image.url != null%}
+              <img src="{{ post.image.url }}" class="w-100 rounded">
+            {% endif %}
             {% if post.created_by == user %}
               <div class="mt-3">
                 <a href="{% url 'edit_post' post.topic.board.pk post.topic.pk post.pk %}"

@@ -52,7 +52,7 @@ class ReplyTopicTests(ReplyTopicTestCase):
         '''
         The view must contain two inputs: csrf, message textarea
         '''
-        self.assertContains(self.response, '<input', 1)
+        self.assertContains(self.response, '<input', 2)
         self.assertContains(self.response, '<textarea', 1)
 
 
