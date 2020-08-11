@@ -40,7 +40,7 @@ class TopicListView(ListView):
 def new_topic(request, pk):
     board = get_object_or_404(Board, pk=pk)
     if request.method == 'POST':
-        form = NewTopicForm(request.POST)
+        form = NewTopicForm(request.POST, request.FILES)
         if form.is_valid():
             topic = form.save(commit=False)
             topic.board = board
@@ -48,6 +48,7 @@ def new_topic(request, pk):
             topic.save()
             post = Post.objects.create(
                 message=form.cleaned_data.get('message'),
+                image=form.cleaned_data.get('image'),
                 topic=topic,
                 created_by=request.user
             )

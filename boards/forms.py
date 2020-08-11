@@ -1,6 +1,7 @@
 from django import forms
 from .models import Topic, Post
 
+
 class NewTopicForm(forms.ModelForm):
     message = forms.CharField(
         widget=forms.Textarea(
@@ -9,10 +10,11 @@ class NewTopicForm(forms.ModelForm):
         max_length=4000,
         help_text='The max length of the text is 4000.'
     )
+    image = forms.ImageField(required=False)
 
     class Meta:
         model = Topic
-        fields = ['subject', 'message', ]
+        fields = ['subject', 'message', 'image' ]
 
 class PostForm(forms.ModelForm):
     class Meta:
