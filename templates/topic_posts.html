@@ -42,7 +42,7 @@
             </div>
             {{ post.get_message_as_markdown }}
             {% if post.image.url != null%}
-              <img src="{{ post.image.url }}" class="img-fluid">
+              <img src="{{ post.image.url }}" class="img-fluid" width="150px"> 
             {% endif %}
             {% if post.created_by == user %}
               <div class="mt-3">
