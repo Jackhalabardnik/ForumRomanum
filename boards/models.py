@@ -3,6 +3,7 @@ import math
 from django.db import models
 from django.utils.text import Truncator
 from django.contrib.auth.models import User
+from django.urls import reverse
 
 from django.utils.html import mark_safe
 from markdown import markdown
@@ -33,7 +34,7 @@ class Topic(models.Model):
 
     def get_page_count(self):
         count = self.posts.count()
-        pages = count / 20
+        pages = count / 10
         return math.ceil(pages)
 
     def has_many_pages(self, count=None):
@@ -66,3 +67,12 @@ class Post(models.Model):
 
     def get_message_as_markdown(self):
         return mark_safe(markdown(self.message, safe_mode='escape'))
+
+    def get_absolute_url(self):
+        topic_url = reverse('topic_posts', kwargs={'pk': self.topic.board.pk, 'topic_pk': self.topic.pk})
+        topic_post_url = '{url}?page={page}#{id}'.format(
+            url=topic_url,
+            id=self.pk,
+            page=self.topic.get_page_count()
+        )
+        return topic_post_url

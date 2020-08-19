@@ -1,6 +1,6 @@
 from django.db.models import Count
 
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 
 from django.shortcuts import render, redirect, get_object_or_404
 
@@ -8,7 +8,9 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 from django.contrib.auth.decorators import login_required
 
-from django.views.generic import UpdateView, ListView
+from django.contrib.auth.mixins import LoginRequiredMixin
+
+from django.views.generic import UpdateView, ListView, CreateView, FormView
 
 from django.utils import timezone
 from django.utils.decorators import method_decorator
@@ -79,36 +81,26 @@ class PostListView(ListView):
         queryset = self.topic.posts.order_by('created_at')
         return queryset
 
-@login_required
-def reply_topic(request, pk, topic_pk):
-    topic = get_object_or_404(Topic, board__pk=pk, pk=topic_pk)
-    if request.method == 'POST':
-        form = PostForm(request.POST, request.FILES)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.topic = topic
-            post.created_by = request.user
-            post.save()
+class ReplyTopicView(LoginRequiredMixin, CreateView):
+    form_class = PostForm
+    template_name = 'reply_topic.html'
 
-            topic.last_updated = timezone.now()
-            topic.save()
+    def get_context_data(self, *args, **kwargs):
+        context = super(ReplyTopicView, self).get_context_data(*args, **kwargs)
+        topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
+        context['topic'] = topic
+        return context
+ 
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        form.instance.topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
+        form.instance.topic.last_updated = timezone.now()
+        form.instance.topic.save()
+        return super().form_valid(form)
 
-            topic_url = reverse('topic_posts', kwargs={'pk': pk, 'topic_pk': topic_pk})
-            topic_post_url = '{url}?page={page}#{id}'.format(
-                url=topic_url,
-                id=post.pk,
-                page=topic.get_page_count()
-            )
-
-            return redirect(topic_post_url)
-    else:
-        form = PostForm()
-    return render(request, 'reply_topic.html', {'topic': topic, 'form': form})
-
-@method_decorator(login_required, name='dispatch')
-class PostUpdateView(UpdateView):
+class PostUpdateView(LoginRequiredMixin, UpdateView):
     model = Post
-    fields = ('message', 'image')
+    form_class = PostForm
     template_name = 'edit_post.html'
     pk_url_kwarg = 'post_pk'
     context_object_name = 'post'

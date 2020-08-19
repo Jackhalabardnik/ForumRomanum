@@ -4,7 +4,7 @@ from django.urls import resolve, reverse
 
 from ..forms import PostForm
 from ..models import Board, Post, Topic
-from ..views import reply_topic
+from ..views import ReplyTopicView
 
 
 class ReplyTopicTestCase(TestCase):
@@ -39,7 +39,7 @@ class ReplyTopicTests(ReplyTopicTestCase):
 
     def test_view_function(self):
         view = resolve('/boards/1/topics/1/reply/')
-        self.assertEquals(view.func, reply_topic)
+        self.assertEquals(view.func.view_class, ReplyTopicView)
 
     def test_csrf(self):
         self.assertContains(self.response, 'csrfmiddlewaretoken')
