@@ -1,19 +1,16 @@
 from django.db.models import Count
 
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
-from django.contrib.auth.decorators import login_required
-
 from django.contrib.auth.mixins import LoginRequiredMixin
 
-from django.views.generic import UpdateView, ListView, CreateView, FormView
+from django.views.generic import UpdateView, ListView, CreateView
 
 from django.utils import timezone
-from django.utils.decorators import method_decorator
 
 from .forms import NewTopicForm, PostForm
 from .models import Board, Topic, Post
@@ -38,27 +35,6 @@ class TopicListView(ListView):
         queryset = self.board.topics.order_by('-last_updated').annotate(replies=Count('posts') - 1)
         return queryset
 
-@login_required
-def new_topic(request, pk):
-    board = get_object_or_404(Board, pk=pk)
-    if request.method == 'POST':
-        form = NewTopicForm(request.POST, request.FILES)
-        if form.is_valid():
-            topic = form.save(commit=False)
-            topic.board = board
-            topic.starter = request.user
-            topic.save()
-            post = Post.objects.create(
-                message=form.cleaned_data.get('message'),
-                image=form.cleaned_data.get('image'),
-                topic=topic,
-                created_by=request.user
-            )
-            return redirect('topic_posts', pk=pk, topic_pk=topic.pk)
-    else:
-        form = NewTopicForm()
-    return render(request, 'new_topic.html', {'board': board, 'form': form})
-
 class PostListView(ListView):
     model = Post
     context_object_name = 'posts'
@@ -80,6 +56,29 @@ class PostListView(ListView):
         self.topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
         queryset = self.topic.posts.order_by('created_at')
         return queryset
+
+class NewTopicView(LoginRequiredMixin, CreateView):
+    form_class = NewTopicForm
+    template_name = 'new_topic.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(NewTopicView, self).get_context_data(*args, **kwargs)
+        board = get_object_or_404(Board, pk=self.kwargs.get('pk'))
+        context['board'] = board
+        return context
+ 
+    def form_valid(self, form):
+        topic = form.save(commit=False)
+        topic.board = get_object_or_404(Board, pk=self.kwargs.get('pk'))
+        topic.starter = self.request.user
+        topic.save()
+        post = Post.objects.create(
+            message=form.cleaned_data.get('message'),
+            image=form.cleaned_data.get('image'),
+            topic=topic,
+            created_by=self.request.user
+        )
+        return redirect('topic_posts', pk=post.topic.board.pk, topic_pk=post.topic.pk)
 
 class ReplyTopicView(LoginRequiredMixin, CreateView):
     form_class = PostForm

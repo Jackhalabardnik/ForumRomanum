@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 
 from ..forms import NewTopicForm
 
-from ..views import new_topic
+from ..views import NewTopicView
 from ..models import Board, Topic, Post
 
 class NewTopicTests(TestCase):
@@ -27,7 +27,7 @@ class NewTopicTests(TestCase):
 
     def test_new_topic_url_resolves_new_topic_view(self):
         view = resolve('/boards/1/new/')
-        self.assertEquals(view.func, new_topic)
+        self.assertEquals(view.func.view_class, NewTopicView)
 
     def test_new_topic_view_contains_link_back_to_board_topics_view(self):
         new_topic_url = reverse('new_topic', kwargs={'pk': 1})
