@@ -12,6 +12,8 @@ from django.views.generic import UpdateView, ListView, CreateView
 
 from django.utils import timezone
 
+from django.template.defaultfilters import slugify
+
 from .forms import NewTopicForm, PostForm, SearchForm
 from .models import Board, Topic, Post
 
@@ -39,7 +41,27 @@ class TopicListView(ListView):
     def post(self, request, **kwargs):
         form = SearchForm(request.POST)
         if form.is_valid():
-            return redirect('search_topic', search_phase=form.cleaned_data.get('search_text'))
+            return redirect('search_topic', search_phase=slugify(form.cleaned_data.get('search_text')))
+        return redirect('board_topics', pk=kwargs['pk'])
+
+class SearchTopicView(ListView):
+    model = Topic
+    context_object_name = 'topics'
+    template_name = 'search_topic.html'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        kwargs['form'] = SearchForm()
+        return super().get_context_data(**kwargs)
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(subject__contains=self.kwargs['search_phase'])
+    
+    def post(self, request, **kwargs):
+        form = SearchForm(request.POST)
+        if form.is_valid():
+            return queryset.filter(message__contains=self.kwargs['search_phase'].replace('-',' '))
         return redirect('board_topics', pk=kwargs['pk'])
 
 class PostListView(ListView):
@@ -56,6 +78,7 @@ class PostListView(ListView):
             self.topic.save()
             self.request.session[session_key] = True
 
+        kwargs['form'] = SearchForm()
         kwargs['topic'] = self.topic
         return super().get_context_data(**kwargs)
 
@@ -64,15 +87,31 @@ class PostListView(ListView):
         queryset = self.topic.posts.order_by('created_at')
         return queryset
 
-class SearchTopicView(ListView):
-    model = Topic
-    context_object_name = 'topics'
-    template_name = 'search_topic.html'
+    def post(self, request, **kwargs):
+        form = SearchForm(request.POST)
+        if form.is_valid():
+            return redirect('search_post', search_phase=slugify(form.cleaned_data.get('search_text')))
+        return redirect('topic_posts', pk=kwargs['pk'], topic_pk=kwargs['topic_pk'])
+
+class SearchPostView(ListView):
+    model = Post
+    context_object_name = 'posts'
+    template_name = 'search_post.html'
     paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        kwargs['form'] = SearchForm()
+        return super().get_context_data(**kwargs)
+    
+    def post(self, request, **kwargs):
+        form = SearchForm(request.POST)
+        if form.is_valid():
+            return redirect('search_post', search_phase=slugify(form.cleaned_data.get('search_text')))
+        return redirect('topic_posts', pk=kwargs['pk'], topic_pk=kwargs['topic_pk'])
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        return queryset.filter(subject__contains=self.kwargs['search_phase'])
+        return queryset.filter(message__contains=self.kwargs['search_phase'].replace('-',' '))
 
 class NewTopicView(LoginRequiredMixin, CreateView):
     form_class = NewTopicForm
