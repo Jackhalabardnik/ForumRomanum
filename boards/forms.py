@@ -24,3 +24,8 @@ class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ['message', 'image', ]
+
+class SearchForm(forms.Form):
+    search_text = forms.CharField(max_length=50)
+    class Meta:
+        fields = ['search_text']

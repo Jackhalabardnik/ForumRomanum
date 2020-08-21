@@ -2,7 +2,7 @@ from django.db.models import Count
 
 from django.urls import reverse
 
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
@@ -12,7 +12,7 @@ from django.views.generic import UpdateView, ListView, CreateView
 
 from django.utils import timezone
 
-from .forms import NewTopicForm, PostForm
+from .forms import NewTopicForm, PostForm, SearchForm
 from .models import Board, Topic, Post
 
 class BoardListView(ListView):
@@ -27,6 +27,7 @@ class TopicListView(ListView):
     paginate_by = 20
 
     def get_context_data(self, **kwargs):
+        kwargs['form'] = SearchForm()
         kwargs['board'] = self.board
         return super().get_context_data(**kwargs)
 
@@ -34,6 +35,12 @@ class TopicListView(ListView):
         self.board = get_object_or_404(Board, pk=self.kwargs.get('pk'))
         queryset = self.board.topics.order_by('-last_updated').annotate(replies=Count('posts') - 1)
         return queryset
+    
+    def post(self, request, **kwargs):
+        form = SearchForm(request.POST)
+        if form.is_valid():
+            return redirect('search_topic', search_phase=form.cleaned_data.get('search_text'))
+        return redirect('board_topics', pk=kwargs['pk'])
 
 class PostListView(ListView):
     model = Post
@@ -56,6 +63,16 @@ class PostListView(ListView):
         self.topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
         queryset = self.topic.posts.order_by('created_at')
         return queryset
+
+class SearchTopicView(ListView):
+    model = Topic
+    context_object_name = 'topics'
+    template_name = 'search_topic.html'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(subject__contains=self.kwargs['search_phase'])
 
 class NewTopicView(LoginRequiredMixin, CreateView):
     form_class = NewTopicForm
