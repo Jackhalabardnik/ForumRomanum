@@ -26,6 +26,8 @@ class PostForm(forms.ModelForm):
         fields = ['message', 'image', ]
 
 class SearchForm(forms.Form):
+    CHOICES=[('topic','topics'), ('post','posts')]
+
     search_text = forms.CharField(max_length=50)
-    class Meta:
-        fields = ['search_text']
+
+    search_for = forms.ChoiceField(choices=CHOICES, widget=forms.RadioSelect)
