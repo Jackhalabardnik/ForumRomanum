@@ -65,7 +65,7 @@ class SearchTopicView(SearchView):
     template_name = 'search_topic.html'
 
     def get_queryset(self):
-        queryset = super().get_queryset().order_by('-last_updated')
+        queryset = super().get_queryset().order_by('-last_updated').annotate(replies=Count('posts') - 1)
         return queryset.filter(subject__contains=self.kwargs['search_phase'].replace('-',' '))
 
 class PostListView(BasicSearchView):

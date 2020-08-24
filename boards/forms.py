@@ -14,11 +14,7 @@ class NewTopicForm(forms.ModelForm):
 
     class Meta:
         model = Topic
-<<<<<<< HEAD
         fields = ['subject', 'message', 'image' ]
-=======
-        fields = ['subject', 'message', ]
->>>>>>> 946d3bd... Now can edit and remove images everywhere
 
 class PostForm(forms.ModelForm):
     class Meta:
