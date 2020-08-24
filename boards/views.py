@@ -17,15 +17,7 @@ from django.template.defaultfilters import slugify
 from .forms import NewTopicForm, PostForm, SearchForm
 from .models import Board, Topic, Post
 
-class BoardListView(ListView):
-    model = Board
-    context_object_name = 'boards'
-    template_name = 'home.html'
-
-    def get_context_data(self, **kwargs):
-        kwargs['form'] = SearchForm()
-        return super().get_context_data(**kwargs)
-
+class BasicSearchView(ListView):
     def post(self, request, **kwargs):
         form = SearchForm(request.POST)
         if form.is_valid():
@@ -35,7 +27,23 @@ class BoardListView(ListView):
                 return redirect('search_post', search_phase=slugify(form.cleaned_data.get('search_text')))
         return redirect('home')
 
-class TopicListView(ListView):
+class SearchView(BasicSearchView):
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        kwargs['form'] = SearchForm()
+        return super().get_context_data(**kwargs)
+
+class BoardListView(BasicSearchView):
+    model = Board
+    context_object_name = 'boards'
+    template_name = 'home.html'
+
+    def get_context_data(self, **kwargs):
+        kwargs['form'] = SearchForm()
+        return super().get_context_data(**kwargs)
+
+class TopicListView(BasicSearchView):
     model = Topic
     context_object_name = 'topics'
     template_name = 'topics.html'
@@ -50,40 +58,17 @@ class TopicListView(ListView):
         self.board = get_object_or_404(Board, pk=self.kwargs.get('pk'))
         queryset = self.board.topics.order_by('-last_updated').annotate(replies=Count('posts') - 1)
         return queryset
-    
-    def post(self, request, **kwargs):
-        form = SearchForm(request.POST)
-        if form.is_valid():
-            if form.cleaned_data.get('search_for') == 'topic':
-                return redirect('search_topic', search_phase=slugify(form.cleaned_data.get('search_text')))
-            else:
-                return redirect('search_post', search_phase=slugify(form.cleaned_data.get('search_text')))
-        return redirect('home')
 
-class SearchTopicView(ListView):
+class SearchTopicView(SearchView):
     model = Topic
     context_object_name = 'topics'
     template_name = 'search_topic.html'
-    paginate_by = 10
-
-    def get_context_data(self, **kwargs):
-        kwargs['form'] = SearchForm()
-        return super().get_context_data(**kwargs)
 
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.filter(subject__contains=self.kwargs['search_phase'].replace('-',' '))
-    
-    def post(self, request, **kwargs):
-        form = SearchForm(request.POST)
-        if form.is_valid():
-            if form.cleaned_data.get('search_for') == 'topic':
-                return redirect('search_topic', search_phase=slugify(form.cleaned_data.get('search_text')))
-            else:
-                return redirect('search_post', search_phase=slugify(form.cleaned_data.get('search_text')))
-        return redirect('home')
 
-class PostListView(ListView):
+class PostListView(BasicSearchView):
     model = Post
     context_object_name = 'posts'
     template_name = 'topic_posts.html'
@@ -106,33 +91,10 @@ class PostListView(ListView):
         queryset = self.topic.posts.order_by('created_at')
         return queryset
 
-    def post(self, request, **kwargs):
-        form = SearchForm(request.POST)
-        if form.is_valid():
-            if form.cleaned_data.get('search_for') == 'topic':
-                return redirect('search_topic', search_phase=slugify(form.cleaned_data.get('search_text')))
-            else:
-                return redirect('search_post', search_phase=slugify(form.cleaned_data.get('search_text')))
-        return redirect('home')
-
-class SearchPostView(ListView):
+class SearchPostView(SearchView):
     model = Post
     context_object_name = 'posts'
     template_name = 'search_post.html'
-    paginate_by = 10
-
-    def get_context_data(self, **kwargs):
-        kwargs['form'] = SearchForm()
-        return super().get_context_data(**kwargs)
-    
-    def post(self, request, **kwargs):
-        form = SearchForm(request.POST)
-        if form.is_valid():
-            if form.cleaned_data.get('search_for') == 'topic':
-                return redirect('search_topic', search_phase=slugify(form.cleaned_data.get('search_text')))
-            else:
-                return redirect('search_post', search_phase=slugify(form.cleaned_data.get('search_text')))
-        return redirect('home')
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -188,7 +150,6 @@ class PostUpdateView(LoginRequiredMixin, UpdateView):
     def get_queryset(self):
         queryset = super().get_queryset()
         return queryset.filter(created_by=self.request.user)
-
 
     def form_valid(self, form):
         post = form.save(commit=False)
