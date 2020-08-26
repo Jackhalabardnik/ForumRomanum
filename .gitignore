@@ -1,7 +1,7 @@
 #my stuff
 media/
 
-accounts/__pycache__/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
