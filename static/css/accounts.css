@@ -1,16 +1,16 @@
 body {
-    background-image: url(../img/watercolor.png);
+    background-image: url(../img/roman.jpeg);
   }
   
   .logo {
-    font-family: 'Peralta', cursive;
+    font-family: 'Peralta', bold;
   }
   
   .logo a {
-    color: rgba(0,0,0,.9);
+    color: rgba(255, 218, 98, 0.9);
   }
   
   .logo a:hover,
   .logo a:active {
-    text-decoration: none;
+    background-color: black;
   }
