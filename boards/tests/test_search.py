@@ -17,6 +17,7 @@ class SearchTestCase(TestCase):
         user = User.objects.create_user(username=self.username, email='john@doe.com', password=self.password)
         self.client.login(username=self.username, password=self.password)
 
+
 class SearchTopicTests(SearchTestCase):
     def setUp(self):
         super().setUp()
@@ -42,6 +43,7 @@ class SearchTopicTests(SearchTestCase):
         The view must contain four inputs: csrf, message textarea and two radios
         '''
         self.assertContains(self.response, '<input', 4)
+
 
 class SearchPostTests(SearchTestCase):
     def setUp(self):

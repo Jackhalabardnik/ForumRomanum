@@ -1,13 +1,12 @@
 from django.urls import reverse
 from django.urls import resolve
 from django.test import TestCase
-
 from django.contrib.auth.models import User
 
 from ..forms import NewTopicForm
-
 from ..views import TopicListView
 from ..models import Board, Topic, Post
+
 
 class BoardTopicsTests(TestCase):
     def setUp(self):

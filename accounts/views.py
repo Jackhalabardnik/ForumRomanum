@@ -8,6 +8,7 @@ from django.views.generic import UpdateView
 
 from .forms import SignUpForm
 
+
 def signup(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -18,6 +19,7 @@ def signup(request):
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form})
+
 
 @method_decorator(login_required, name='dispatch')
 class UserUpdateView(UpdateView):

@@ -1,21 +1,15 @@
 from django.db.models import Count
-
 from django.urls import reverse
-
 from django.shortcuts import render, redirect, get_object_or_404
-
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-
 from django.contrib.auth.mixins import LoginRequiredMixin
-
 from django.views.generic import UpdateView, ListView, CreateView
-
 from django.utils import timezone
-
 from django.template.defaultfilters import slugify
 
 from .forms import NewTopicForm, PostForm, SearchForm
 from .models import Board, Topic, Post
+
 
 class BasicSearchView(ListView):
     def post(self, request, **kwargs):
@@ -27,12 +21,14 @@ class BasicSearchView(ListView):
                 return redirect('search_post', search_phase=slugify(form.cleaned_data.get('search_text')))
         return redirect('home')
 
+
 class SearchView(BasicSearchView):
     paginate_by = 10
 
     def get_context_data(self, **kwargs):
         kwargs['form'] = SearchForm()
         return super().get_context_data(**kwargs)
+
 
 class BoardListView(BasicSearchView):
     model = Board
@@ -42,6 +38,7 @@ class BoardListView(BasicSearchView):
     def get_context_data(self, **kwargs):
         kwargs['form'] = SearchForm()
         return super().get_context_data(**kwargs)
+
 
 class TopicListView(BasicSearchView):
     model = Topic
@@ -59,6 +56,7 @@ class TopicListView(BasicSearchView):
         queryset = self.board.topics.order_by('-last_updated').annotate(replies=Count('posts') - 1)
         return queryset
 
+
 class SearchTopicView(SearchView):
     model = Topic
     context_object_name = 'topics'
@@ -67,6 +65,7 @@ class SearchTopicView(SearchView):
     def get_queryset(self):
         queryset = super().get_queryset().order_by('-last_updated').annotate(replies=Count('posts') - 1)
         return queryset.filter(subject__contains=self.kwargs['search_phase'].replace('-',' '))
+
 
 class PostListView(BasicSearchView):
     model = Post
@@ -91,6 +90,7 @@ class PostListView(BasicSearchView):
         queryset = self.topic.posts.order_by('created_at')
         return queryset
 
+
 class SearchPostView(SearchView):
     model = Post
     context_object_name = 'posts'
@@ -99,6 +99,7 @@ class SearchPostView(SearchView):
     def get_queryset(self):
         queryset = super().get_queryset().order_by('created_at')
         return queryset.filter(message__contains=self.kwargs['search_phase'].replace('-',' '))
+
 
 class NewTopicView(LoginRequiredMixin, CreateView):
     form_class = NewTopicForm
@@ -123,6 +124,7 @@ class NewTopicView(LoginRequiredMixin, CreateView):
         )
         return redirect('topic_posts', pk=post.topic.board.pk, topic_pk=post.topic.pk)
 
+
 class ReplyTopicView(LoginRequiredMixin, CreateView):
     form_class = PostForm
     template_name = 'reply_topic.html'
@@ -139,6 +141,7 @@ class ReplyTopicView(LoginRequiredMixin, CreateView):
         form.instance.topic.last_updated = timezone.now()
         form.instance.topic.save()
         return super().form_valid(form)
+
 
 class PostUpdateView(LoginRequiredMixin, UpdateView):
     model = Post

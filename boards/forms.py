@@ -1,4 +1,5 @@
 from django import forms
+
 from .models import Topic, Post
 
 
@@ -16,10 +17,12 @@ class NewTopicForm(forms.ModelForm):
         model = Topic
         fields = ['subject', 'message', 'image' ]
 
+
 class PostForm(forms.ModelForm):
     class Meta:
         model = Post
         fields = ['message', 'image', ]
+
 
 class SearchForm(forms.Form):
     CHOICES=[('topic','topics'), ('post','posts')]
