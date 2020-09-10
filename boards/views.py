@@ -64,7 +64,7 @@ class SearchTopicView(SearchView):
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('-last_updated').annotate(replies=Count('posts') - 1)
-        return queryset.filter(subject__contains=self.kwargs['search_phase'].replace('-',' '))
+        return queryset.filter(subject__icontains=self.kwargs['search_phase'].replace('-',' '))
 
 
 class PostListView(BasicSearchView):
@@ -98,7 +98,7 @@ class SearchPostView(SearchView):
 
     def get_queryset(self):
         queryset = super().get_queryset().order_by('created_at')
-        return queryset.filter(message__contains=self.kwargs['search_phase'].replace('-',' '))
+        return queryset.filter(message__icontains=self.kwargs['search_phase'].replace('-',' '))
 
 
 class NewTopicView(LoginRequiredMixin, CreateView):
